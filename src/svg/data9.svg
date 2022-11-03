@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="116px" height="116px" viewBox="0 0 116 116" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>数据样式-9</title>
+    <defs>
+        <polygon id="path-1" points="58 0 108.229473 29 108.229473 87 58 116 7.77052658 87 7.77052658 29"></polygon>
+        <filter x="-4.3%" y="-4.3%" width="108.6%" height="108.6%" filterUnits="objectBoundingBox" id="filter-2">
+            <feGaussianBlur stdDeviation="5" in="SourceAlpha" result="shadowBlurInner1"></feGaussianBlur>
+            <feOffset dx="0" dy="0" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
+            <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0.298039216   0 0 0 0 0.768627451   0 0 0 0 1  0 0 0 1 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="规范" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="通用组件" transform="translate(-2608.000000, -3284.000000)">
+            <g id="数据展示" transform="translate(80.000000, 3086.000000)">
+                <g id="数据样式-9" transform="translate(2528.000000, 145.000000)">
+                    <g id="数据样式-9" transform="translate(0.000000, 53.000000)">
+                        <g id="多边形">
+                            <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                            <path stroke="#4CC4FF" stroke-width="0.920634921" d="M58,0.531528819 L107.769156,29.2657644 L107.769156,86.7342356 L58,115.468471 L8.23084404,86.7342356 L8.23084404,29.2657644 L58,0.531528819 Z" stroke-linejoin="square"></path>
+                        </g>
+                        <path d="M102.820553,18.507943 L114.701452,25.3673836 L114.701452,91.0368051 L103.157736,97.7015727 M12.9986231,97.9880709 L0.958677686,91.0368051 L0.958677686,25.3673836 L13.0045458,18.4126984" id="形状" stroke="#4CC4FF" stroke-width="0.920634921"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
