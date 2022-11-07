@@ -11,6 +11,7 @@
       :col-num="gridLayoutConfig.colNum"
       :max-rows="gridLayoutConfig.rowNum"
       :row-height="gridLayoutConfig.rowHeight"
+      :margin="gridLayoutConfig.margin"
       :autoSize="false"
       :is-draggable="computedDraggable"
       :is-resizable="computedResizable"
@@ -28,7 +29,8 @@
         :h="item.h"
         :i="item.i"
       >
-        <span class="text">{{ item.i }}</span>
+        <!-- <component ref="gridComponents" :is="componentId"></component> -->
+        <span class="text">{{ item.name }}</span>
       </grid-item>
     </grid-layout>
   </div>
@@ -43,16 +45,18 @@ export default {
   data() {
     return {
       gridLayoutConfig: {
-        colNum: 140,
-        rowNum: 50,
+        colNum: 377,
+        rowNum: 96,
         rowHeight: 0,
         margin: [10, 10],
       },
       newGridId: "" /* 新增元素的id */,
       dragingFlag: false /* 拖拽标识，是否新增元素中 */,
       layout: [
-        { x: 0, y: 0, w: 10, h: 10, i: "0" },
-        { x: 10, y: 0, w: 10, h: 20, i: "1" },
+        { x: 0, y: 0, w: 165, h: 47, i: "0", name: "卡片原始一" },
+        // { x: 124, y: 0, w: 3, h: 10, i: "1", name: "卡片原始二" },
+        // { x: 5, y: 0, w: 4, h: 20, i: "2", name: "卡片原始三" },
+        // { x: 9, y: 0, w: 40, h: 20, i: "3", name: "卡片原始四" },
       ],
     };
   },
@@ -81,7 +85,9 @@ export default {
       console.log("拖拽开始", data);
     },
     dragMove(event, data) {
-      console.log("拖拽移动");
+      const dragData = cloneDeep(data);
+
+      mouseXY.y = event.clientY;
       mouseXY.x = event.clientX;
       if (!this.dragingFlag) {
         // 需要对新元素的设置一个i
@@ -90,7 +96,6 @@ export default {
         )}`;
       }
       this.dragingFlag = true;
-      mouseXY.y = event.clientY;
       let parentRect = this.$refs.gridLayoutContent.getBoundingClientRect();
       let mouseInGrid = false;
       if (
@@ -105,25 +110,19 @@ export default {
         mouseInGrid === true &&
         this.layout.findIndex((item) => item.i === this.newGridId) === -1
       ) {
-        this.layout.push({
+        const tempObj = {
+          ...dragData,
           x: (this.layout.length * 2) % (this.colNum || 12),
-          y: this.layout.length + (this.colNum || 12), // puts it at the bottom
+          y: this.layout.length + (this.colNum || 12),
           w: 10,
           h: 10,
           i: this.newGridId,
-        });
+          kpstid: data.kpstid,
+        };
+        this.layout.push(tempObj);
       }
       let index = this.layout.findIndex((item) => item.i === this.newGridId);
       if (index !== -1) {
-        try {
-          const tempIndex = this.$refs.gridlayout.$children.findIndex(
-            (el) => el?.$vnode?.key === this.newGridId
-          );
-          let dragEl = this.$refs.gridlayout.$children[tempIndex];
-          dragEl.$el.style.transform = `translate3d(
-            ${mouseXY.x - parentRect.left}px, 
-            ${mouseXY.y - parentRect.top}px, 0px)`;
-        } catch (e) {}
         let el = this.$refs.gridlayout.$children[index];
         el.dragging = {
           top: mouseXY.y - parentRect.top,
@@ -182,19 +181,6 @@ export default {
           10,
           10
         );
-        try {
-          const tempIndex = this.$refs.gridlayout.$children.findIndex(
-            (el) => el?.$vnode?.key === this.newGridId
-          );
-          const dragEl = this.$refs.gridlayout.$children[tempIndex];
-          const tempPosition = dragEl.calcPosition(
-            DragPos.x,
-            DragPos.y,
-            DragPos.w,
-            DragPos.h
-          );
-          dragEl.$el.style.transform = `translate3d(${tempPosition.left}px, ${tempPosition.top}px, 0px)`;
-        } catch {}
       }
     },
     drop(event) {},
@@ -209,14 +195,21 @@ export default {
 <style scoped lang="less">
 .vue-grid-item {
   touch-action: none;
+  // 取消默认位移动画
+  transition: none;
+  border: none !important;
 }
 
 .drag-container {
-  height: 500px;
-  width: 1400px;
+  height: 960px;
+  width: 3780px;
   overflow: hidden;
   background: skyblue;
   margin: 0 auto;
+  .vue-grid-layout {
+    height: 100%;
+    overflow: hidden;
+  }
 }
 .droppable-element {
   width: 150px;
