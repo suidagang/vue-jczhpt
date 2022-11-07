@@ -30,6 +30,7 @@
         :i="item.i"
       >
         <!-- <component ref="gridComponents" :is="componentId"></component> -->
+        <span class="remove" @click.prevent.stop="removeItem(item.i)">x</span>
         <span class="text">{{ item.name }}</span>
       </grid-item>
     </grid-layout>
@@ -53,7 +54,7 @@ export default {
       newGridId: "" /* 新增元素的id */,
       dragingFlag: false /* 拖拽标识，是否新增元素中 */,
       layout: [
-        { x: 0, y: 0, w: 165, h: 47, i: "0", name: "卡片原始一" },
+        { x: 0, y: 0, w: 15, h: 32, i: "0", name: "卡片原始一" },
         // { x: 124, y: 0, w: 3, h: 10, i: "1", name: "卡片原始二" },
         // { x: 5, y: 0, w: 4, h: 20, i: "2", name: "卡片原始三" },
         // { x: 9, y: 0, w: 40, h: 20, i: "3", name: "卡片原始四" },
@@ -114,8 +115,8 @@ export default {
           ...dragData,
           x: (this.layout.length * 2) % (this.colNum || 12),
           y: this.layout.length + (this.colNum || 12),
-          w: 10,
-          h: 10,
+          w: dragData.kpkd,
+          h: dragData.kpgd,
           i: this.newGridId,
           kpstid: data.kpstid,
         };
@@ -139,12 +140,14 @@ export default {
             this.newGridId,
             new_pos.x,
             new_pos.y,
-            10,
-            10
+            dragData.kpkd,
+            dragData.kpgd
           );
           DragPos.i = String(index);
           DragPos.x = this.layout[index].x;
           DragPos.y = this.layout[index].y;
+          DragPos.w = dragData.kpkd;
+          DragPos.h = dragData.kpgd;
         }
         if (mouseInGrid === false) {
           this.$refs.gridlayout.dragEvent(
@@ -152,8 +155,8 @@ export default {
             this.newGridId,
             new_pos.x,
             new_pos.y,
-            1,
-            1
+            dragData.kpkd,
+            dragData.kpgd
           );
           this.layout = this.layout.filter((obj) => obj.i !== this.newGridId);
         }
@@ -178,8 +181,8 @@ export default {
           DragPos.i,
           DragPos.x,
           DragPos.y,
-          10,
-          10
+          DragPos.w,
+          DragPos.h
         );
       }
     },
@@ -188,11 +191,24 @@ export default {
       const tempEvent = event;
       tempEvent.dataTransfer.dropEffect = "move";
     },
+    removeItem(val) {
+      console.log(val, "---val");
+      const index = this.layout.map((item) => item.i).indexOf(val);
+      this.layout.splice(index, 1);
+    },
   },
 };
 </script>
 
 <style scoped lang="less">
+.remove {
+  position: absolute;
+  right: 2px;
+  top: 0;
+  cursor: pointer;
+  font-size: 50px;
+  z-index: 999;
+}
 .vue-grid-item {
   touch-action: none;
   // 取消默认位移动画
