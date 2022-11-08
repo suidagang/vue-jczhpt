@@ -1,5 +1,7 @@
 <template>
   <div class="container">
+    <button @click="goppt">去ppt</button>
+    <button @click="gomap">去map</button>
     <com-head @showLibrary="showLibrary" />
     <right-library
       ref="comLibrary"
@@ -26,6 +28,18 @@ export default {
     dragGridLayout,
   },
   methods: {
+    gomap() {
+      const { href } = this.$router.resolve({
+        path: "/map",
+      });
+      window.open(href, "_blank");
+    },
+    goppt() {
+      const { href } = this.$router.resolve({
+        path: "/ppt",
+      });
+      window.open(href, "_blank");
+    },
     showLibrary() {
       this.$refs.comLibrary.show();
     },

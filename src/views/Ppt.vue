@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <button @click="gomap">到ruler</button>
     <ZrSvg type="right" size="60" color="#C71585" />
     <ZrSvg type="data9" size="60" color="#C71585" />
     <ZrSvg type="data72" size="60" color="#C71585" />
@@ -17,7 +18,11 @@
 
 <script>
 import ZrSvg from "./ZrSvg.vue";
+import God from "@/util/scal";
 export default {
+  created() {
+    new God().init();
+  },
   data() {
     return {
       showTip: true,
@@ -25,6 +30,11 @@ export default {
   },
   components: {
     ZrSvg,
+  },
+  methods: {
+    gomap() {
+      this.$router.push("/ruler");
+    },
   },
 };
 </script>
