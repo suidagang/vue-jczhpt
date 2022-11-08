@@ -135,13 +135,14 @@ export default {
         );
 
         if (mouseInGrid === true) {
+          //拖拽过来时红色底部的宽高，宽高要反向
           this.$refs.gridlayout.dragEvent(
             "dragstart",
             this.newGridId,
             new_pos.x,
             new_pos.y,
-            dragData.kpkd,
-            dragData.kpgd
+            dragData.kpgd,
+            dragData.kpkd
           );
           DragPos.i = String(index);
           DragPos.x = this.layout[index].x;
