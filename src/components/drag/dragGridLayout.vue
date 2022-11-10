@@ -20,6 +20,14 @@
       :use-css-transforms="true"
       @layout-updated="layoutUpdatedEvent"
     >
+      <!-- <grid-item-box
+        class="preview"
+        :isPc="isPc"
+        :class="{ danger: judgeDanger(item) }"
+        v-for="item in previewArr"
+        :key="item.i"
+        :data="item"
+      /> -->
       <grid-item
         :key="item.i"
         v-for="item in layout"
@@ -30,8 +38,10 @@
         :i="item.i"
       >
         <!-- <component ref="gridComponents" :is="componentId"></component> -->
-        <span class="remove" @click.prevent.stop="removeItem(item.i)">x</span>
-        <span class="text">{{ item.name }}</span>
+        <div class="drag-box">
+          <span class="remove" @click.prevent.stop="removeItem(item.i)">x</span>
+          <span class="text">{{ item.name }}</span>
+        </div>
       </grid-item>
     </grid-layout>
   </div>
@@ -40,8 +50,16 @@
 <script>
 import VueGridLayout from "vue-grid-layout";
 import { throttle, cloneDeep } from "lodash-es";
+import {
+  judgeIsOut,
+  getInvolveAndContain,
+  changeOtherStatic,
+  getOverlap,
+  correctSize,
+} from "./util";
 let mouseXY = { x: null, y: null };
 let DragPos = { x: null, y: null, w: 10, h: 10, i: null };
+
 export default {
   data() {
     return {
@@ -49,10 +67,12 @@ export default {
         colNum: 377,
         rowNum: 96,
         rowHeight: 0,
+        colWidth: 0,
         margin: [10, 10],
       },
       newGridId: "" /* 新增元素的id */,
       dragingFlag: false /* 拖拽标识，是否新增元素中 */,
+      dragingType: "" /* 拖拽标识, 拖拽移动加了延时，导致偶尔出现元素错误 */,
       layout: [
         { x: 0, y: 0, w: 15, h: 32, i: "0", name: "卡片原始一" },
         // { x: 124, y: 0, w: 3, h: 10, i: "1", name: "卡片原始二" },
@@ -66,6 +86,12 @@ export default {
     GridItem: VueGridLayout.GridItem,
   },
   computed: {
+    computedCorrect() {
+      return {
+        width: !this.colWidth,
+        height: !this.rowHeight,
+      };
+    },
     computedDraggable() {
       return true;
     },
@@ -82,12 +108,24 @@ export default {
   },
   methods: {
     layoutUpdatedEvent: throttle((newLayout) => {}, 70),
-    dragStart(event, data) {
-      console.log("拖拽开始", data);
+    dragStart() {
+      this.dragingType = "dragStart";
     },
-    dragMove(event, data) {
+    dragMove: throttle(function (event, data) {
+      if (this.dragingType === "dragStop") {
+        // 拖拽结束之后的延迟不继续执行；
+        return;
+      }
+      // drop弹起的时候，位置为空
+      if (!event.clientX && !event.clientY) {
+        return;
+      }
+      if (mouseXY.x === event.clientX && mouseXY.y === event.clientY) {
+        return;
+      }
       const dragData = cloneDeep(data);
-
+      // 校正新增元素的宽高
+      correctSize("in", this.computedCorrect, dragData);
       mouseXY.y = event.clientY;
       mouseXY.x = event.clientX;
       if (!this.dragingFlag) {
@@ -107,16 +145,46 @@ export default {
       ) {
         mouseInGrid = true;
       }
-      if (
-        mouseInGrid === true &&
-        this.layout.findIndex((item) => item.i === this.newGridId) === -1
-      ) {
+      const [newW, newH] = [dragData.kpkd || 10, dragData.kpgd || 10];
+      let [newX, newY] = [10, 10];
+      newX = Math.round(
+        (mouseXY.x - parentRect.left) /
+          (this.gridLayoutConfig.colWidth
+            ? this.gridLayoutConfig.margin[0] + this.gridLayoutConfig.colWidth
+            : this.gridLayoutConfig.margin[0]) -
+          newW / 2
+      );
+      newY = Math.round(
+        (mouseXY.y - parentRect.top) /
+          (this.gridLayoutConfig.rowHeight
+            ? this.gridLayoutConfig.margin[1] + this.gridLayoutConfig.rowHeight
+            : this.gridLayoutConfig.margin[1]) -
+          newH / 2
+      );
+      if (newX < 0) {
+        newX = 0;
+      }
+      if (newX > this.gridLayoutConfig.colNum - newW) {
+        newX = this.gridLayoutConfig.colNum - newW;
+      }
+      if (newY < 0) {
+        newY = 0;
+      }
+      if (newY > this.gridLayoutConfig.rowNum - newH) {
+        newY = this.gridLayoutConfig.rowNum - newH;
+      }
+      const dropIndex = this.layout.findIndex(
+        (item) => item.i === this.newGridId
+      );
+      // 鼠标在容器内，并且未创建新增元素，则创建新增元素；
+      if (mouseInGrid === true && dropIndex === -1) {
+        console.log("第一次新增元素");
         const tempObj = {
           ...dragData,
-          x: (this.layout.length * 2) % (this.colNum || 12),
-          y: this.layout.length + (this.colNum || 12),
-          w: dragData.kpkd,
-          h: dragData.kpgd,
+          x: newX,
+          y: newY,
+          w: newW,
+          h: newH,
           i: this.newGridId,
           kpstid: data.kpstid,
         };
@@ -124,67 +192,90 @@ export default {
       }
       let index = this.layout.findIndex((item) => item.i === this.newGridId);
       if (index !== -1) {
-        let el = this.$refs.gridlayout.$children[index];
-        el.dragging = {
-          top: mouseXY.y - parentRect.top,
-          left: mouseXY.x - parentRect.left,
-        };
-        let new_pos = el.calcXY(
-          mouseXY.y - parentRect.top,
-          mouseXY.x - parentRect.left
-        );
-
+        try {
+          const tempIndex = this.$refs.gridlayout.$children.findIndex(
+            (el) => el?.$vnode?.key === this.newGridId
+          );
+          const dragEl = this.$refs.gridlayout.$children[tempIndex];
+          // 隐藏拖拽placeholder
+          dragEl.$el.style.transform = `translate3d(
+            ${
+              mouseXY.x -
+              parentRect.left -
+              (dragEl.$el.offsetWidth - this.gridLayoutConfig.margin[0]) / 2
+            }px,
+            ${
+              mouseXY.y -
+              parentRect.top -
+              (dragEl.$el.offsetHeight - this.gridLayoutConfig.margin[1]) / 2
+            }px, 0px)`;
+        } catch (e) {
+          // eslint-disable-next-line no-empty
+        }
+        console.log("已经新增元素");
+        DragPos.x = newX;
+        DragPos.y = newY;
+        DragPos.w = newW;
+        DragPos.h = newH;
+        DragPos.i = String(dropIndex);
         if (mouseInGrid === true) {
           //拖拽过来时红色底部的宽高，宽高要反向
-          this.$refs.gridlayout.dragEvent(
-            "dragstart",
-            this.newGridId,
-            new_pos.x,
-            new_pos.y,
-            dragData.kpgd,
-            dragData.kpkd
-          );
-          DragPos.i = String(index);
-          DragPos.x = this.layout[index].x;
-          DragPos.y = this.layout[index].y;
-          DragPos.w = dragData.kpkd;
-          DragPos.h = dragData.kpgd;
+          // this.$refs.gridlayout.dragEvent(
+          //   "dragstart",
+          //   this.newGridId,
+          //   DragPos.x,
+          //   DragPos.y,
+          //   DragPos.h,
+          //   DragPos.w
+          // );
         }
         if (mouseInGrid === false) {
+          console.log("移除拖拽范围了");
           this.$refs.gridlayout.dragEvent(
             "dragend",
             this.newGridId,
-            new_pos.x,
-            new_pos.y,
-            dragData.kpkd,
-            dragData.kpgd
+            DragPos.x,
+            DragPos.y,
+            DragPos.w,
+            DragPos.h
           );
           this.layout = this.layout.filter((obj) => obj.i !== this.newGridId);
         }
       }
-    },
+    }, 50),
     dragEnd() {
+      this.dragingType = "dragStop";
       this.dragingFlag = false;
-      let parentRect = this.$refs.gridLayoutContent.getBoundingClientRect();
-      let mouseInGrid = false;
-      if (
-        mouseXY.x > parentRect.left &&
-        mouseXY.x < parentRect.right &&
-        mouseXY.y > parentRect.top &&
-        mouseXY.y < parentRect.bottom
-      ) {
-        mouseInGrid = true;
-      }
+
       let index = this.layout.findIndex((item) => item.i === this.newGridId);
-      if (mouseInGrid === true && index !== -1) {
+      if (index !== -1) {
         this.$refs.gridlayout.dragEvent(
           "dragend",
-          DragPos.i,
+          this.newGridId,
           DragPos.x,
           DragPos.y,
-          DragPos.w,
-          DragPos.h
+          DragPos.h,
+          DragPos.w
         );
+        this.layout[index].x = DragPos.x;
+        this.layout[index].y = DragPos.y;
+        try {
+          const tempIndex = this.$refs.gridlayout.$children.findIndex(
+            (el) => el?.$vnode?.key === this.newGridId
+          );
+
+          const dragEl = this.$refs.gridlayout.$children[tempIndex];
+          const tempPosition = dragEl.calcPosition(
+            DragPos.x,
+            DragPos.y,
+            DragPos.w,
+            DragPos.h
+          );
+          // 当preview元素的位置无变化时，不会触发内部事件位置更新，手动赋值
+          dragEl.$el.style.transform = `translate3d(${tempPosition.left}px, ${tempPosition.top}px, 0px)`;
+        } catch (e) {
+          // eslint-disable-next-line no-empty
+        }
       }
     },
     drop(event) {},
@@ -202,6 +293,16 @@ export default {
 </script>
 
 <style scoped lang="less">
+.drag-box {
+  width: 100%;
+  height: 100%;
+  background: url("http://5b0988e595225.cdn.sohucs.com/images/20200226/453b2d9aaf0b403d850b4cea3766c982.jpeg")
+    center;
+  .text {
+    color: red;
+    font-size: 40px;
+  }
+}
 .remove {
   position: absolute;
   right: 2px;
@@ -213,7 +314,7 @@ export default {
 .vue-grid-item {
   touch-action: none;
   // 取消默认位移动画
-  transition: none;
+  // transition: none;
   border: none !important;
 }
 
@@ -251,7 +352,7 @@ export default {
 }
 
 .vue-grid-item .text {
-  font-size: 24px;
+  font-size: 40px;
   text-align: center;
   position: absolute;
   top: 0;
@@ -312,7 +413,13 @@ export default {
   columns: 120px;
 }
 
-.container .vue-grid-item.vue-grid-placeholder {
-  background: green;
+.vue-grid-item {
+  &.preview {
+    background-color: rgba(13, 214, 73, 0.45);
+  }
+  /deep/ &.vue-grid-placeholder {
+    background: green;
+    // opacity: 1;
+  }
 }
 </style>
