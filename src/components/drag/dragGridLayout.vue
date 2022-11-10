@@ -107,7 +107,7 @@ export default {
     },
     preventCollision() {
       // resize的时候需要设置防止碰撞, 其他情况由数据static状态控制
-      return true;
+      return this.resizeFlag;
       // 新增拖放元素的时候，防止元素被挤开，这里动态设置
       // 拖拽的时候，防止元素被挤开，这里动态设置
       // return this.dragingFlag || this.resizeFlag || this.keyFlag;
@@ -284,7 +284,7 @@ export default {
       this.dragingType = "dragStop";
       this.dragingFlag = false;
       if (this.involveArr.length) {
-        this.layOutList = this.layout.filter((obj) => obj.i !== this.newGridId);
+        this.layout = this.layout.filter((obj) => obj.i !== this.newGridId);
         this.involveArr = [];
         this.dragingFlag = false;
       }
