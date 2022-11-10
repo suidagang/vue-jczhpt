@@ -219,15 +219,7 @@ export default {
         DragPos.h = newH;
         DragPos.i = String(dropIndex);
         if (mouseInGrid === true) {
-          //拖拽过来时红色底部的宽高，宽高要反向
-          // this.$refs.gridlayout.dragEvent(
-          //   "dragstart",
-          //   this.newGridId,
-          //   DragPos.x,
-          //   DragPos.y,
-          //   DragPos.h,
-          //   DragPos.w
-          // );
+          console.log("在拖拽范围");
         }
         if (mouseInGrid === false) {
           console.log("移除拖拽范围了");
