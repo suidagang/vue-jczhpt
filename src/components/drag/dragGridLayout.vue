@@ -20,7 +20,7 @@
       :use-css-transforms="true"
       @layout-updated="layoutUpdatedEvent"
     >
-      <grid-item
+      <!-- <grid-item
         :key="item.i"
         :class="{ danger: judgeDanger(item) }"
         v-for="item in previewArr"
@@ -29,7 +29,7 @@
         :w="item.w"
         :h="item.h"
         :i="item.i"
-      />
+      /> -->
       <grid-item
         :key="item.i"
         v-for="item in layout"
@@ -81,7 +81,7 @@ export default {
       resizeFlag: false /* resize标识，是否新增元素中 */,
       dragingType: "" /* 拖拽标识, 拖拽移动加了延时，导致偶尔出现元素错误 */,
       layout: [
-        { x: 0, y: 0, w: 15, h: 32, i: "0", name: "卡片原始一" },
+        // { x: 0, y: 0, w: 15, h: 32, i: "0", name: "卡片原始一" },
         // { x: 124, y: 0, w: 3, h: 10, i: "1", name: "卡片原始二" },
         // { x: 5, y: 0, w: 4, h: 20, i: "2", name: "卡片原始三" },
         // { x: 9, y: 0, w: 40, h: 20, i: "3", name: "卡片原始四" },
@@ -106,6 +106,7 @@ export default {
       return true;
     },
     preventCollision() {
+      console.log(this.resizeFlag, "this.resizeFlag");
       // resize的时候需要设置防止碰撞, 其他情况由数据static状态控制
       return this.resizeFlag;
       // 新增拖放元素的时候，防止元素被挤开，这里动态设置
@@ -289,6 +290,7 @@ export default {
         this.dragingFlag = false;
       }
       this.previewArr = [];
+      changeOtherStatic("all", this.layout, false);
       let index = this.layout.findIndex((item) => item.i === this.newGridId);
       if (index !== -1) {
         this.$refs.gridlayout.dragEvent(

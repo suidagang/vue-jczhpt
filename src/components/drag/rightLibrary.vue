@@ -24,8 +24,8 @@ export default {
         {
           name: "卡片一",
           kpstid: "1",
-          kpkd: 30,
-          kpgd: 20,
+          kpkd: 70,
+          kpgd: 40,
         },
         {
           name: "卡片二",
