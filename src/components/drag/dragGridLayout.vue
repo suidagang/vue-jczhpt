@@ -40,11 +40,13 @@
         :h="item.h"
         :i="item.i"
         @move="moveEvent"
+        @mousedown.left.native="gridItemBoxMousedown($event, item)"
+        @mouseup.left.native="gridItemBoxMouseup(item)"
       >
         <!-- <component ref="gridComponents" :is="componentId"></component> -->
         <div class="drag-box">
           <span class="remove" @click.prevent.stop="removeItem(item.i)">x</span>
-          <span class="text">{{ item.name }}</span>
+          <span class="text">{{ item.name }}<br />{{ item.i }}</span>
         </div>
       </grid-item>
     </grid-layout>
@@ -76,13 +78,17 @@ export default {
       },
       involveArr: [],
       previewArr: [],
+      bakupList: [],
+      replaceFlag: false /* 拖拽之后，是否可交换位置 */,
+      safeBox: {} /* 被拖拽的盒子信息安全记录，用于拖拽矫正 */,
+      originalBox: {} /* 被拖拽的原始盒子信息 */,
       newGridId: "" /* 新增元素的id */,
       dragingFlag: false /* 拖拽标识，是否新增元素中 */,
       resizeFlag: false /* resize标识，是否新增元素中 */,
       dragingType: "" /* 拖拽标识, 拖拽移动加了延时，导致偶尔出现元素错误 */,
       layout: [
-        // { x: 0, y: 0, w: 15, h: 32, i: "0", name: "卡片原始一" },
-        // { x: 124, y: 0, w: 3, h: 10, i: "1", name: "卡片原始二" },
+        { x: 0, y: 0, w: 30, h: 30, i: "0", name: "卡片原始一" },
+        { x: 30, y: 0, w: 30, h: 30, i: "1", name: "卡片原始二" },
         // { x: 5, y: 0, w: 4, h: 20, i: "2", name: "卡片原始三" },
         // { x: 9, y: 0, w: 40, h: 20, i: "3", name: "卡片原始四" },
       ],
@@ -92,7 +98,14 @@ export default {
     GridLayout: VueGridLayout.GridLayout,
     GridItem: VueGridLayout.GridItem,
   },
+  created() {
+    this.bakupList = cloneDeep(this.layout);
+  },
   computed: {
+    currentDrag() {
+      return this.$refs?.gridlayout?.placeholder || {};
+      // return this.$refs.gridLayout.isDragging ? this.$refs.gridLayout.placeholder : {};
+    },
     computedCorrect() {
       return {
         width: !this.colWidth,
@@ -106,7 +119,6 @@ export default {
       return true;
     },
     preventCollision() {
-      console.log(this.resizeFlag, "this.resizeFlag");
       // resize的时候需要设置防止碰撞, 其他情况由数据static状态控制
       return this.resizeFlag;
       // 新增拖放元素的时候，防止元素被挤开，这里动态设置
@@ -115,6 +127,18 @@ export default {
     },
   },
   methods: {
+    gridItemBoxMousedown(event, item) {
+      if (event?.target?.className === "vue-resizable-handle") {
+        this.resizeFlag = true;
+      }
+      // 1、获取被拖拽的元素，保存当前历史记录（由于没有拖拽开始事件, 需要增加额外的辅助事件，）
+      this.originalBox = cloneDeep(item);
+      this.bakupList = cloneDeep(this.layout);
+    },
+    gridItemBoxMouseup() {
+      this.movingFlag = false;
+      this.resizeFlag = false;
+    },
     judgePreview(item) {
       return this.previewArr.some((el) => el.oldI === item.i);
     },
@@ -122,14 +146,87 @@ export default {
       return this.involveArr.some((el) => el.i === item.i);
     },
     moveEvent(i, newX, newY) {
-      // console.log("MOVED i=" + i + ", X=" + newX + ", Y=" + newY);
+      if (this.dragingFlag) {
+        return;
+      }
+      this.movingFlag = true;
+      // 2、获取鼠标拖拽元素所覆盖的子项
+      const involveAndContain = getInvolveAndContain(
+        this.currentDrag,
+        this.bakupList
+      );
+      /* preview：1-2  大小一样交换，重叠超过50%交换 */
+      const totalArr = involveAndContain.total;
+      const likeArr = [];
+      const dislikeArr = [];
+      for (let j = 0; j < totalArr.length; j++) {
+        const tempj = totalArr[j];
+        if (tempj.w === this.currentDrag.w && tempj.h === this.currentDrag.h) {
+          likeArr.push(tempj);
+        } else {
+          dislikeArr.push(tempj);
+        }
+      }
+      if (likeArr.length) {
+        // 多个相似，比较数量和面积占比，筛选出可能的一个
+        const AREASIZE = this.currentDrag.w * this.currentDrag.h;
+        const exchangeArr = [];
+        for (let j = 0; j < likeArr.length; j++) {
+          const tempj = likeArr[j];
+          const tempArea = getOverlap(tempj, this.currentDrag);
+          // 面积超过50%才可交换，多个（最多是相邻的两个）取第一个
+          if (
+            !exchangeArr.length &&
+            Math.round((tempArea.area / AREASIZE) * 100) >= 50
+          ) {
+            exchangeArr.push(tempj);
+          } else {
+            dislikeArr.push(tempj);
+          }
+        }
+        this.previewArr = exchangeArr.map((item) => {
+          return {
+            isDraggable: false,
+            isResizable: false,
+            static: true,
+            x: this.originalBox.x,
+            y: this.originalBox.y,
+            w: item.w,
+            h: item.h,
+            oldI: item.i,
+            i: `preview-${item.i}`,
+          };
+        });
+        this.involveArr = dislikeArr;
+      } else {
+        // 此时存在几率(被拖拽元素与相邻元素底部纵向距离 <= 2)，被拖拽的元素，自动排列到元素的底部，超出显示范围，需要手动纠正
+        const isOut = judgeIsOut(this.currentDrag, {
+          colNum: this.gridLayoutConfig.colNum,
+          rowNum: this.gridLayoutConfig.rowNum,
+        });
+        console.log(isOut, "p-----isout");
+        if (!isOut) {
+          // 如果此次移动安全，则保存为下一次的安全记录，如果不安全则替换
+          this.safeBox = cloneDeep(this.currentDrag);
+          this.involveArr = totalArr;
+        } else {
+          this.$refs.gridlayout.placeholder = cloneDeep(this.safeBox);
+          const involveAndContain3 = getInvolveAndContain(
+            this.$refs.gridlayout.placeholder,
+            this.bakupList
+          );
+          this.involveArr = involveAndContain3.total;
+        }
+        this.previewArr = [];
+      }
+      this.replaceFlag = !this.involveArr.length;
+      // console.log(this.currentDrag, this.bakupList, totalArr, "totalArr");
     },
     layoutUpdatedEvent: throttle(function (newLayout) {
       this.resizeFlag = false;
       if (this.dragingFlag) {
         return;
       }
-      // console.log("Updated layout: ", newLayout);
     }, 70),
     dragStart() {
       this.dragingType = "dragStart";
