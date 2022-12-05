@@ -8,6 +8,8 @@ import Ppt from '../views/Ppt.vue'
 import Map from '../views/Map.vue'
 import GisMap from '../views/GisMap.vue'
 import Drag from '../views/Drag.vue'
+import ParamsComponents from '../views/ParamsComponents.vue'
+import XingkongPage from '../views/Xingkong.vue'
 
 Vue.use(VueRouter)
 
@@ -48,7 +50,17 @@ const routes = [
     path: '/gismap',
     name: 'gismap',
     component: GisMap
+  }, {
+    path: '/paramscomponents',
+    name: 'paramscomponents',
+    component: ParamsComponents
+  }, {
+    path: '/xingkong',
+    name: 'xingkong',
+    component: XingkongPage
   }
+
+
 ]
 
 const router = new VueRouter({

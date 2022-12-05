@@ -94,6 +94,7 @@ export default {
   methods: {
     watchitem(item) {
       if (this.curBox != item.i) {
+        console.log(item, "----");
         for (let j = 0; historyLayout[j] != undefined; j++) {
           if (historyLayout[j].i == item.i) {
             item.x = historyLayout[j].x;
