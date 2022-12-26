@@ -15,6 +15,25 @@ module.exports = {
     // 会接收一个基于 webpack-chain 的 ChainableConfig 实例。
     // 允许对内部的 webpack 配置进行更细粒度的修改。
     chainWebpack: config => {
+        const svgRule = config.module.rule('svg')
+        svgRule.uses.clear()
+        svgRule
+            .test(/\.svg$/)
+            .include.add(path.resolve(__dirname, './src/icons/svg'))
+            .end()
+            .use('svg-sprite-loader')
+            .loader('svg-sprite-loader')
+            .options({
+                symbolId: 'icon-[name]'
+            })
+        const fileRule = config.module.rule('file')
+        fileRule.uses.clear()
+        fileRule
+            .test(/\.svg$/)
+            .exclude.add(path.resolve(__dirname, './src/icons/svg'))
+            .end()
+            .use('file-loader')
+            .loader('file-loader')
         // const cdn = {
         //     // 访问https://unpkg.com/element-ui/lib/theme-chalk/index.css获取最新版本
         //     css: ["//unpkg.com/element-ui@2.10.1/lib/theme-chalk/index.css"],

@@ -7,6 +7,8 @@ import Fragment from 'vue-fragment'
 import * as echarts from "echarts";
 import BrowserZoomCorrect from "@/util/scal";
 
+import '@/icons'
+
 Vue.prototype.$echarts = echarts;
 
 Vue.use(Fragment.Plugin)

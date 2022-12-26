@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="74px" height="87px" viewBox="0 0 74 87" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>编组 17</title>
+    <defs>
+        <linearGradient x1="84.8858131%" y1="25.4154755%" x2="24.1179174%" y2="91.0949577%" id="linearGradient-1">
+            <stop stop-color="#04E9F6" stop-opacity="0.595033872" offset="0%"></stop>
+            <stop stop-color="#04E9F6" stop-opacity="0.198044143" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="界面设计" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="大企业管理全景式概览" transform="translate(-1835.000000, -564.000000)">
+            <g id="风火轮" transform="translate(1836.000000, 486.000000)">
+                <g id="编组-17" transform="translate(0.000000, 79.000000)">
+                    <path d="M18.9070156,0 L29.2624621,14.4090528 L39.6185629,28.8193952 L32.9015971,29.01992 C39.8345723,44.7107697 53.6126243,56.5933103 70.2776952,60.9051551 L70.2776952,60.9051551 L57.7464519,70 L71,85 C41.4511328,79.9809104 17.2108615,58.3564888 8.40596388,29.750882 L0,30 L9.45383497,14.9996776 L18.9070156,0 Z" id="形状结合" stroke="#04E9F6" fill="url(#linearGradient-1)"></path>
+                    <text id="04" font-family="Impact" font-size="16" font-style="condensed" font-weight="700" fill="#FFFFFF">
+                        <tspan x="11.7148438" y="29">04</tspan>
+                    </text>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

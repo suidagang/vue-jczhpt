@@ -10,6 +10,7 @@ import GisMap from '../views/GisMap.vue'
 import Drag from '../views/Drag.vue'
 import ParamsComponents from '../views/ParamsComponents.vue'
 import XingkongPage from '../views/Xingkong.vue'
+import SvgPage from '../views/SvgPage.vue'
 
 Vue.use(VueRouter)
 
@@ -58,6 +59,10 @@ const routes = [
     path: '/xingkong',
     name: 'xingkong',
     component: XingkongPage
+  }, {
+    path: '/svg',
+    name: 'svg',
+    component: SvgPage
   }
 
 
