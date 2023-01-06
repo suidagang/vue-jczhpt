@@ -4,10 +4,10 @@ const randomNum = (min = 1, max = 9) => Math.floor(Math.random() * (max - min + 
 
 class Star {
   constructor(width, height) {
-    this.x = randomNum(width / 2 - 100, width / 2 + 100);
-    this.y = randomNum(height / 2 - 100, height / 2 + 100);
+    this.x = randomNum(width / 2 - 800, width / 2 + 800);
+    this.y = randomNum(height / 2 - 800, height / 2 + 800);
     // 流星雨的长度
-    this.length = randomNum(80, 150);
+    this.length = randomNum(180, 250);
     const dx = this.x - width / 2;
     const dy = this.y - height / 2;
     let sin = null;
@@ -18,7 +18,7 @@ class Star {
     }
     this.width = cos !== null || sin !== null ? this.length * cos : 0; // 流星所占的宽度
     this.height = cos !== null || sin !== null ? this.length * sin : this.length; // 流星所占的高度
-    const speed = randomNum(1, 2);
+    const speed = randomNum(5, 6);
     this.offset_x = speed * cos;
     this.offset_y = speed * sin;
   }
@@ -84,8 +84,8 @@ class Tx {
 }
 
 export function init(canvas) {
-  canvas.width = 1920;
-  canvas.height = 900;
+  canvas.width = 3840;
+  canvas.height = 990;
   const tx = new Tx(canvas, 200);
   tx.drawStars();
   tx.animate();

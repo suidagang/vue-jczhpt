@@ -9,6 +9,7 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "animate.css": "^4.1.1",
     "clean-webpack-plugin": "^4.0.0",
     "core-js": "^3.6.5",
     "echarts": "^5.3.3",

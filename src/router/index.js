@@ -12,10 +12,11 @@ import ParamsComponents from '../views/ParamsComponents.vue'
 import XingkongPage from '../views/Xingkong.vue'
 import SvgPage from '../views/SvgPage.vue'
 import Animate from '../views/Animate.vue'
+import Card from '../views/Card.vue'
 
 Vue.use(VueRouter)
 
-const routes = [
+export const routes = [
   {
     path: '/',
     name: 'Drag',
@@ -68,6 +69,10 @@ const routes = [
     path: '/animate',
     name: 'animate',
     component: Animate
+  }, {
+    path: '/card',
+    name: 'Card',
+    component: Card
   }
 
 

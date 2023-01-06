@@ -6,10 +6,6 @@
         v-for="(item, index) in drawList"
         :key="index"
       >
-        <!-- 数组中存入index值时，将写有动画的class属性赋给标签，即开始播放动画 -->
-        <!-- <div :class="['card', selectArr.includes(index) ? 'cardAnimate' : '']">
-          卡牌背面{{ index + 1 }}
-        </div> -->
         <div :class="['contxt', 'contxtAnimate']">卡牌{{ index + 1 }}正面</div>
       </div>
       <button @click="startAniame" style="margin-right: 10px">开始动画</button>
@@ -32,15 +28,9 @@ export default {
   methods: {
     startAniame() {
       this.drawList = 6;
-      for (let i = 0; i < 6; i++) {
-        // setTimeout(() => {
-        // this.selectArr.push(i);
-        // }, 1500 + (i - 1) * 200);
-      }
     },
     resetAniame() {
       this.drawList = 0;
-      this.selectArr = [];
     },
   },
 };
@@ -110,14 +100,10 @@ export default {
   top: 472px;
 }
 /* 卡片翻牌 */
-/* 背面 */
-.cardAnimate {
-  animation: rotetaCard 1s ease-in;
-  animation-fill-mode: forwards;
-}
+
 /* 正面 */
 .contxtAnimate {
-  animation: contxtRotate 1s ease-in;
+  animation: sacalBox 1s ease-in;
   animation-fill-mode: forwards;
 }
 /* 正面卡牌翻牌动画 */
@@ -144,15 +130,13 @@ export default {
     opacity: 1;
   } */
 }
-
-/* 背面卡牌翻牌动画 */
-@keyframes rotetaCard {
+/* 由小放大效果 */
+@keyframes sacalBox {
   from {
-    transform: rotateY(0);
+    scale: 0;
   }
-
   to {
-    transform: rotateY(180deg);
+    scale: 1;
   }
 }
 </style>
